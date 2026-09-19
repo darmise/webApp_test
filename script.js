@@ -92,6 +92,7 @@ function onLoginError(err) {
 }
 
 function handleFetchError(err) {
+  console.error("Dettaglio errore:", err);
   const message = err && err.status === 403
     ? "Il tuo account non è autorizzato a consultare questo elenco. Contatta l'amministratore."
     : (err && err.message) || "Impossibile leggere i dati in questo momento. Riprova più tardi.";
@@ -134,10 +135,24 @@ function buildFlatHeaders(values) {
 
 async function loadSheetData() {
   const url = `https://sheets.googleapis.com/v4/spreadsheets/${CONFIG.SPREADSHEET_ID}/values/${encodeURIComponent(CONFIG.SHEET_RANGE)}`;
-  const res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
+  let res;
+  try {
+    res = await fetch(url, { headers: { Authorization: `Bearer ${accessToken}` } });
+  } catch (networkErr) {
+    // fetch stesso ha fallito: nessuna risposta dal server (rete, CORS, offline...)
+    const err = new Error("Connessione all'API di Google Sheets fallita (verifica la connessione di rete).");
+    err.status = 0;
+    throw err;
+  }
 
   if (!res.ok) {
-    const err = new Error("Errore nella richiesta al foglio");
+    let apiMessage = "";
+    try {
+      const body = await res.json();
+      apiMessage = body?.error?.message || "";
+    } catch (_) { /* corpo non JSON o vuoto */ }
+
+    const err = new Error(apiMessage || `Errore HTTP ${res.status} dall'API di Google Sheets.`);
     err.status = res.status;
     throw err;
   }
