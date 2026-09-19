@@ -23,7 +23,6 @@ const CONFIG = {
   // di ricerca (es. "email" o "codice"), basta aggiungerlo qui: il modulo
   // di ricerca si genera automaticamente da questa lista.
   SEARCH_FIELDS: [
-    { key: "nome", label: "Nome" },
-    { key: "cognome", label: "Cognome" }
+    { key: "nominativo", label: "Nominativo" }
   ]
 };
