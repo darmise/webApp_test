@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Controllo Accessi</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+
+<div class="card">
+  <div id="status-band" class="status-band"></div>
+
+  <main class="card-body">
+
+    <header class="app-header">
+      <h1>Controllo Accessi</h1>
+      <span id="user-badge" class="user-badge hidden"></span>
+    </header>
+
+    <!-- VISTA 1: LOGIN -->
+    <section id="view-login" class="view">
+      <p class="lead">Accedi con il tuo account Google per consultare l'elenco.</p>
+      <button id="btn-login" class="btn btn-primary">Accedi con Google</button>
+      <p id="login-error" class="msg msg-error hidden"></p>
+    </section>
+
+    <!-- VISTA 2: RICERCA -->
+    <section id="view-search" class="view hidden">
+      <p class="lead">Inserisci i dati della persona da verificare.</p>
+      <form id="search-form" class="search-form">
+        <div id="search-fields"></div>
+        <button type="submit" class="btn btn-primary">Verifica</button>
+      </form>
+      <p id="search-status" class="msg hidden"></p>
+      <button id="btn-logout" class="btn btn-text">Esci</button>
+    </section>
+
+    <!-- VISTA 3: RISULTATO -->
+    <section id="view-result" class="view hidden">
+      <div id="result-content"></div>
+      <button id="btn-new-search" class="btn btn-primary">Nuova ricerca</button>
+    </section>
+
+  </main>
+</div>
+
+<script src="https://accounts.google.com/gsi/client" async defer></script>
+<script src="config.js"></script>
+<script src="script.js"></script>
+</body>
+</html>

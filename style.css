@@ -1,0 +1,230 @@
+/* ===================================================================
+   Controllo Accessi — stile
+   Concept: la card è un piccolo "pannello di controllo ingressi". Una
+   sottile spia luminosa in cima cambia colore in base allo stato reale
+   (neutra in attesa, verde se la persona è presente, rossa se non lo è)
+   — l'unico elemento vivace della pagina, ed è informativo, non decorativo.
+   =================================================================== */
+
+:root {
+  --paper: #EEF0F5;
+  --panel: #FFFFFF;
+  --ink: #12162B;
+  --ink-soft: #5A6178;
+  --line: #E1E4EC;
+
+  --accent: #2F45E0;
+  --accent-hover: #2436B8;
+
+  --ok: #158A4D;
+  --ok-bg: #E7F7EE;
+  --no: #C6303E;
+  --no-bg: #FCEAEC;
+
+  --band-neutral: linear-gradient(90deg, #12162B, #2F45E0);
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--paper);
+  color: var(--ink);
+  font-family: "Inter", -apple-system, "Segoe UI", sans-serif;
+  line-height: 1.5;
+  padding: 24px;
+}
+
+.card {
+  width: 100%;
+  max-width: 420px;
+  background: var(--panel);
+  border-radius: 10px;
+  overflow: hidden;
+  box-shadow: 0 1px 2px rgba(18, 22, 43, 0.06), 0 12px 32px -16px rgba(18, 22, 43, 0.18);
+}
+
+.status-band {
+  height: 6px;
+  background: var(--band-neutral);
+  transition: background 0.25s ease;
+}
+.status-band.band-ok { background: var(--ok); }
+.status-band.band-no { background: var(--no); }
+
+.card-body { padding: 34px 32px 28px; }
+
+.app-header {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 22px;
+}
+
+.app-header h1 {
+  font-family: "Space Grotesk", "Inter", sans-serif;
+  font-size: 1.3rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+.user-badge {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.hidden { display: none !important; }
+
+.lead {
+  color: var(--ink-soft);
+  font-size: 0.96rem;
+  margin: 0 0 22px;
+  max-width: 34ch;
+}
+
+/* Bottoni */
+.btn {
+  font-family: "Space Grotesk", "Inter", sans-serif;
+  display: block;
+  width: 100%;
+  padding: 12px 18px;
+  border-radius: 7px;
+  font-size: 0.98rem;
+  font-weight: 600;
+  cursor: pointer;
+  border: none;
+  text-align: center;
+  transition: background 0.15s ease, transform 0.05s ease;
+}
+
+.btn-primary {
+  background: var(--accent);
+  color: #fff;
+}
+.btn-primary:hover { background: var(--accent-hover); }
+.btn-primary:active { transform: scale(0.99); }
+
+.btn-text {
+  background: none;
+  color: var(--ink-soft);
+  font-family: "Inter", sans-serif;
+  font-weight: 500;
+  font-size: 0.88rem;
+  width: auto;
+  padding: 10px 0 0;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.btn-text:hover { color: var(--ink); }
+
+/* Form di ricerca */
+.search-form {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  margin-bottom: 6px;
+}
+
+.field { display: flex; flex-direction: column; gap: 6px; }
+
+.field label {
+  font-size: 0.84rem;
+  color: var(--ink-soft);
+  font-weight: 500;
+}
+
+.field input {
+  font-family: inherit;
+  padding: 11px 13px;
+  border: 1.5px solid var(--line);
+  border-radius: 6px;
+  font-size: 1rem;
+  color: var(--ink);
+  background: var(--paper);
+}
+
+.field input:focus {
+  outline: none;
+  border-color: var(--accent);
+  background: #fff;
+}
+
+/* Messaggi di stato/errore */
+.msg {
+  font-size: 0.88rem;
+  margin: 16px 0 0;
+  padding: 10px 13px;
+  border-radius: 6px;
+  color: var(--ink-soft);
+  background: var(--paper);
+}
+
+.msg-error {
+  color: var(--no);
+  background: var(--no-bg);
+}
+
+/* Risultato ricerca */
+#result-content { margin-bottom: 22px; }
+
+.result-title {
+  font-family: "Space Grotesk", "Inter", sans-serif;
+  font-size: 1.15rem;
+  font-weight: 700;
+  margin: 0 0 4px;
+}
+
+.result-title.ok { color: var(--ok); }
+.result-title.no { color: var(--no); }
+
+.result-subject {
+  font-size: 1.02rem;
+  font-weight: 600;
+  color: var(--ink);
+  margin: 0 0 18px;
+}
+
+.result-empty {
+  color: var(--ink-soft);
+  font-size: 0.95rem;
+  margin: 0 0 4px;
+}
+
+.detail-list {
+  border-top: 1px solid var(--line);
+}
+
+.detail-row {
+  display: flex;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 10px 0;
+  border-bottom: 1px solid var(--line);
+  font-size: 0.92rem;
+}
+
+.detail-label {
+  color: var(--ink-soft);
+}
+
+.detail-value {
+  font-weight: 500;
+  text-align: right;
+}
+
+/* Accessibilità tastiera */
+button:focus-visible,
+input:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+@media (max-width: 480px) {
+  .card-body { padding: 28px 22px 24px; }
+}
