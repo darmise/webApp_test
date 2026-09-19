@@ -30,16 +30,30 @@
 
     <!-- VISTA 2: RICERCA -->
     <section id="view-search" class="view hidden">
-      <p class="lead">Inserisci i dati della persona da verificare.</p>
+      <p class="lead">Inserisci il nominativo da verificare.</p>
       <form id="search-form" class="search-form">
-        <div id="search-fields"></div>
+        <div class="field">
+          <label for="input-nominativo">Nominativo</label>
+          <input type="text" id="input-nominativo" autocomplete="off" required placeholder="es. Rossi Mario">
+        </div>
+        <label class="checkbox-field">
+          <input type="checkbox" id="input-unilav-only">
+          <span>Cerca solo tra persone con Unilav = SI</span>
+        </label>
         <button type="submit" class="btn btn-primary">Verifica</button>
       </form>
       <p id="search-status" class="msg hidden"></p>
       <button id="btn-logout" class="btn btn-text">Esci</button>
     </section>
 
-    <!-- VISTA 3: RISULTATO -->
+    <!-- VISTA 3: SELEZIONE OMONIMI -->
+    <section id="view-select" class="view hidden">
+      <p class="lead">Sono state trovate più persone con questo nominativo. Seleziona quella corretta.</p>
+      <div id="candidate-list" class="candidate-list"></div>
+      <button id="btn-back-to-search" class="btn btn-text">&larr; Nuova ricerca</button>
+    </section>
+
+    <!-- VISTA 4: RISULTATO -->
     <section id="view-result" class="view hidden">
       <div id="result-content"></div>
       <button id="btn-new-search" class="btn btn-primary">Nuova ricerca</button>
