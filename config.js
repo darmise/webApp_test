@@ -14,11 +14,11 @@ const CONFIG = {
     dataStart: 6
   },
 
-  SEARCH_FIELD: "NOMINATIVO",
+  SEARCH_FIELD: "nominativo",
 
   // Colonna usata per distinguere gli omonimi nella lista di selezione
   // quando la ricerca trova più persone con lo stesso nominativo.
-  DISAMBIGUATION_FIELD: { key: "DATA NASCITA", label: "Data di nascita" },
+  DISAMBIGUATION_FIELD: { key: "data nascita", label: "Data di nascita" },
 
   // Colonne mostrate come riepilogo rapido, subito sotto il nome, quando
   // si apre il risultato (oltre a tutte le altre, mostrate più sotto

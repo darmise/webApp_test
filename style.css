@@ -162,7 +162,7 @@ body {
   background: #fff;
 }
 
-.checkbox-field {
+/*.checkbox-field {
   display: flex;
   align-items: center;
   gap: 9px;
@@ -170,14 +170,14 @@ body {
   color: var(--ink-soft);
   cursor: pointer;
   user-select: none;
-}
+}*/
 
-.checkbox-field input {
+/*.checkbox-field input {
   width: 16px;
   height: 16px;
   accent-color: var(--accent);
   cursor: pointer;
-}
+}*/
 
 /* Messaggi di stato/errore */
 .msg {
@@ -283,6 +283,81 @@ body {
   font-weight: 500;
   text-align: right;
 }
+
+/* Stato: l'informazione principale, in evidenza */
+.status-highlight {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 14px;
+  margin: 18px 0 4px;
+  padding: 14px 16px;
+  border: 1.5px solid var(--accent);
+  border-radius: 8px;
+  background: rgba(47, 69, 224, 0.06);
+}
+
+.status-highlight-label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.status-highlight-value {
+  font-family: "Space Grotesk", "Inter", sans-serif;
+  font-size: 1.35rem;
+  font-weight: 700;
+  color: var(--ink);
+  text-align: right;
+}
+
+/* Attestati posseduti */
+.cert-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.cert-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-radius: 6px;
+  background: var(--paper);
+}
+
+.cert-name {
+  font-weight: 600;
+  font-size: 0.92rem;
+}
+
+.cert-meta {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.cert-date {
+  font-size: 0.8rem;
+  color: var(--ink-soft);
+  white-space: nowrap;
+}
+
+.cert-chip {
+  font-family: "Space Grotesk", "Inter", sans-serif;
+  font-size: 0.7rem;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+  padding: 3px 9px;
+  border-radius: 20px;
+  white-space: nowrap;
+}
+
+.chip-ok { background: var(--ok-bg); color: var(--ok); }
+.chip-no { background: var(--no-bg); color: var(--no); }
 
 /* Accessibilità tastiera */
 button:focus-visible,

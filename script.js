@@ -110,9 +110,23 @@ function handleFetchError(err) {
  * non vuoto a sinistra (è così che appaiono le celle unite lette via API:
  * il valore compare solo nella cella in alto a sinistra della fusione).
  */
-function buildFlatHeaders(values) {
-  const groupRow = values[CONFIG.HEADER_ROWS.group - 1] || [];
-  const subRow = values[CONFIG.HEADER_ROWS.sub - 1] || [];
+function detectHeaderRows(values) {
+  const target = CONFIG.SEARCH_FIELD.trim().toLowerCase();
+  const maxScan = Math.min(values.length, 30); // non serve guardare oltre le prime righe
+
+  for (let r = 0; r < maxScan; r++) {
+    const row = values[r] || [];
+    const found = row.some(cell => (cell || "").toString().trim().toLowerCase() === target);
+    if (found) {
+      return { group: r + 1, sub: r + 2, dataStart: r + 3 }; // numerazione 1-based, come nel foglio
+    }
+  }
+  return null;
+}
+
+function buildFlatHeaders(values, headerRows) {
+  const groupRow = values[headerRows.group - 1] || [];
+  const subRow = values[headerRows.sub - 1] || [];
   const colCount = Math.max(groupRow.length, subRow.length);
 
   const headers = [];
@@ -161,7 +175,10 @@ async function loadSheetData() {
   const values = data.values || [];
   if (values.length === 0) { sheetHeaders = []; sheetRows = []; return; }
 
-  const allHeaders = buildFlatHeaders(values);
+  const detected = detectHeaderRows(values);
+  const headerRows = detected || CONFIG.HEADER_ROWS;
+
+  const allHeaders = buildFlatHeaders(values, headerRows);
 
   // scarta colonne senza alcuna intestazione (celle vuote non appartenenti a nessun gruppo)
   const keepIdx = allHeaders.map((h, i) => h ? i : -1).filter(i => i !== -1);
@@ -170,10 +187,17 @@ async function loadSheetData() {
   const required = [CONFIG.SEARCH_FIELD, CONFIG.DISAMBIGUATION_FIELD.key];
   const missing = required.filter(k => !sheetHeaders.includes(k));
   if (missing.length > 0) {
-    throw new Error(`Colonna non trovata nel foglio: ${missing.join(", ")}. Controlla HEADER_ROWS in config.js.`);
+    console.error("Intestazioni individuate:", sheetHeaders);
+    console.error("Righe usate per l'intestazione:", headerRows);
+    console.error("Prime 10 righe grezze del foglio:", values.slice(0, 10));
+    throw new Error(
+      `Colonna non trovata nel foglio: ${missing.join(", ")}. ` +
+      `Apri la console del browser (F12) per vedere le prime righe grezze del foglio ` +
+      `e capire in quale riga si trova realmente "${CONFIG.SEARCH_FIELD}".`
+    );
   }
 
-  const dataRows = values.slice(CONFIG.HEADER_ROWS.dataStart - 1);
+  const dataRows = values.slice(headerRows.dataStart - 1);
   sheetRows = dataRows.map(row => {
     const record = {};
     keepIdx.forEach((colIdx, i) => {
@@ -188,7 +212,7 @@ async function loadSheetData() {
 searchForm.addEventListener("submit", (e) => {
   e.preventDefault();
   const query = document.getElementById("input-nominativo").value.trim().toLowerCase();
-  const unilavOnly = document.getElementById("input-unilav-only").checked;
+  const unilavOnly = true;
   if (!query) return;
 
   let pool = sheetRows;
@@ -241,56 +265,113 @@ function renderCandidateList(matches) {
 /* ============================= RISULTATO ============================= */
 
 function renderNotFound(query, unilavOnly) {
-  const scope = unilavOnly ? ' (tra le persone con Unilav = SI)' : '';
   resultContent.innerHTML = `
     <h2 class="result-title no">Non trovato</h2>
-    <p class="result-empty">Nessuna corrispondenza per "${escapeHtml(query)}"${scope} nell'elenco.</p>
+    <p class="result-empty">Nessuna corrispondenza per "${escapeHtml(query)}" nell'elenco.</p>
   `;
 }
 
 function renderResult(match) {
   const dKey = CONFIG.DISAMBIGUATION_FIELD.key;
-  const topKeys = new Set([CONFIG.SEARCH_FIELD, dKey, ...CONFIG.HIGHLIGHT_FIELDS]);
+  const statoKey = "stato";
 
-  // riepilogo in alto: data di nascita + campi in evidenza (mansione, unilav, stato...)
-  const topRowsHtml = [dKey, ...CONFIG.HIGHLIGHT_FIELDS]
+  // 1) identità: nominativo (già come titolo), data nascita, mansione
+  const identityKeys = [dKey, "mansione"];
+  const identityHtml = identityKeys
     .filter(k => sheetHeaders.includes(k))
     .map(k => {
       const label = k === dKey ? CONFIG.DISAMBIGUATION_FIELD.label : toTitleCase(k);
       return `<div class="detail-row"><span class="detail-label">${escapeHtml(label)}</span><span class="detail-value">${escapeHtml(match[k] || "—")}</span></div>`;
     }).join("");
 
-  // resto dei campi, raggruppati per categoria (es. "GRU - ATTESTATO/DATA/SCADENZA")
-  const { groups, standalone } = buildGroups(sheetHeaders, topKeys);
+  // 2) stato: l'informazione principale, mostrata in evidenza
+  const statoHtml = sheetHeaders.includes(statoKey) ? `
+    <div class="status-highlight">
+      <span class="status-highlight-label">Stato</span>
+      <span class="status-highlight-value">${escapeHtml(match[statoKey] || "—")}</span>
+    </div>
+  ` : "";
 
-  const groupsHtml = Object.keys(groups).map(groupName => {
-    const fields = groups[groupName];
-    const hasValue = fields.some(f => match[f.key]);
-    if (!hasValue) return "";
-    const rows = fields
-      .filter(f => match[f.key])
-      .map(f => `<div class="detail-row"><span class="detail-label">${escapeHtml(toTitleCase(f.subLabel))}</span><span class="detail-value">${escapeHtml(match[f.key])}</span></div>`)
-      .join("");
-    return `
-      <div class="detail-group">
-        <h3 class="detail-group-title">${escapeHtml(toTitleCase(groupName))}</h3>
-        ${rows}
-      </div>
-    `;
-  }).join("");
+  // 3) attestati: solo quelli posseduti, con esito REGOLARE/SCADUTO calcolato sulla scadenza
+  const excludeKeys = new Set([CONFIG.SEARCH_FIELD, dKey, "mansione", statoKey, "unilav"]);
+  const { groups } = buildGroups(sheetHeaders, excludeKeys);
+  const certRows = buildCertificationRows(groups, match);
 
-  const standaloneHtml = standalone
-    .filter(f => match[f.key])
-    .map(f => `<div class="detail-row"><span class="detail-label">${escapeHtml(toTitleCase(f.label))}</span><span class="detail-value">${escapeHtml(match[f.key])}</span></div>`)
-    .join("");
+  const certHtml = certRows.length > 0
+    ? `<div class="cert-list">${certRows.map(c => `
+        <div class="cert-row">
+          <span class="cert-name">${escapeHtml(c.groupName)}</span>
+          <span class="cert-meta">
+            ${c.scadenzaLabel ? `<span class="cert-date">Scad. ${escapeHtml(c.scadenzaLabel)}</span>` : ""}
+            <span class="cert-chip ${c.expired ? "chip-no" : "chip-ok"}">${c.expired ? "SCADUTO" : "REGOLARE"}</span>
+          </span>
+        </div>
+      `).join("")}</div>`
+    : `<p class="result-empty">Nessun attestato registrato.</p>`;
 
   resultContent.innerHTML = `
-    <h2 class="result-title ok">Trovato</h2>
     <p class="result-subject">${escapeHtml(match[CONFIG.SEARCH_FIELD])}</p>
-    <div class="detail-list">${topRowsHtml}</div>
-    ${groupsHtml}
-    ${standaloneHtml ? `<div class="detail-group"><h3 class="detail-group-title">Altre informazioni</h3>${standaloneHtml}</div>` : ""}
+    <div class="detail-list">${identityHtml}</div>
+    ${statoHtml}
+    <div class="detail-group">
+      <h3 class="detail-group-title">Attestati</h3>
+      ${certHtml}
+    </div>
   `;
+}
+
+/**
+ * Per ogni categoria (es. "GRU", "PLE"...), determina se l'attestato/
+ * certificato è posseduto (campo ATTESTATO o CERTIFICATO = "SI") e, se sì,
+ * calcola REGOLARE/SCADUTO confrontando la SCADENZA con la data odierna.
+ * Le categorie non possedute non vengono incluse nel risultato.
+ */
+function buildCertificationRows(groups, match) {
+  const rows = [];
+  Object.keys(groups).forEach(groupName => {
+    const fields = groups[groupName];
+    const possessoField = fields.find(f => f.subLabel === "attestato" || f.subLabel === "certificato");
+    if (!possessoField) return;
+
+    const possessoVal = (match[possessoField.key] || "").trim().toLowerCase();
+    if (possessoVal !== "si") return;
+
+    const scadenzaField = fields.find(f => f.subLabel === "scadenza");
+    const scadenzaRaw = scadenzaField ? (match[scadenzaField.key] || "") : "";
+    const status = computeCertStatus(scadenzaRaw);
+
+    rows.push({
+      groupName: toTitleCase(groupName),
+      scadenzaLabel: scadenzaRaw,
+      expired: status.known && status.expired
+    });
+  });
+  return rows;
+}
+
+/** Interpreta una data in formato GG/MM/AAAA o AAAA-MM-GG (così come mostrata dal foglio). */
+function parseDateFlexible(str) {
+  if (!str) return null;
+  const s = str.trim();
+
+  let m = /^(\d{4})-(\d{2})-(\d{2})/.exec(s);
+  if (m) return new Date(Number(m[1]), Number(m[2]) - 1, Number(m[3]));
+
+  m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})/.exec(s);
+  if (m) return new Date(Number(m[3]), Number(m[2]) - 1, Number(m[1]));
+
+  const d = new Date(s);
+  return isNaN(d.getTime()) ? null : d;
+}
+
+/** REGOLARE se la scadenza è oggi o nel futuro, SCADUTO se nel passato. Se la data non è leggibile, si considera REGOLARE (nessuna scadenza nota). */
+function computeCertStatus(scadenzaRaw) {
+  const d = parseDateFlexible(scadenzaRaw);
+  if (!d) return { known: false, expired: false };
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+  d.setHours(0, 0, 0, 0);
+  return { known: true, expired: d.getTime() < today.getTime() };
 }
 
 /**
